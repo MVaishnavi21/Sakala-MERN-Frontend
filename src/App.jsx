@@ -20,6 +20,17 @@ function App() {
     }
   }
 
+  const deleteUser = async (id) => {
+    try {
+      await fetch(`http://localhost:3000/users/${id}`, {
+        method: 'DELETE'
+      })
+      fetchUsers() // Refresh list
+    } catch (error) {
+      console.error('Delete failed:', error)
+    }
+  }
+
   useEffect(() => {
     fetchUsers()
   }, [message])
@@ -76,8 +87,16 @@ function App() {
           users.map(user => (
             <div key={user._id} style={{ border: '1px solid #eee', padding: '10px', margin: '5px 0', borderRadius: '5px' }}>
               <strong>{user.name}</strong> | Age: {user.age || 'N/A'} | {user.email}
+    
+              <button 
+                onClick={() => deleteUser(user._id)}
+                style={{ marginLeft: '10px', background: '#ff4444', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '3px', cursor: 'pointer' }}
+              >
+                🗑️ Delete
+              </button>
+    
             </div>
-          ))
+        ))
         }
       </div>
     </div>
