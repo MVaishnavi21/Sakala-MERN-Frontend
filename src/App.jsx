@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+const API_BASE = 'https://sakala-mern-backend.onrender.com'
 
 function App() {
   const [name, setName] = useState('')
@@ -19,7 +20,7 @@ function App() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('http://localhost:3000/users')
+      const res = await fetch(`${API_BASE}/users`)
       const data = await res.json()
       setUsers(data)
     } catch (err) {
@@ -31,7 +32,7 @@ function App() {
 
   const deleteUser = async (id) => {
     try {
-      await fetch(`http://localhost:3000/users/${id}`, {
+      await fetch(`${API_BASE}/users/${id}`, {
         method: 'DELETE'
       })
       fetchUsers() // Refresh list
@@ -61,7 +62,7 @@ function App() {
   try {
     if (editingId) {
       // UPDATE mode
-      const res = await axios.put(`http://localhost:3000/users/${editingId}`, {
+      const res = await axios.put(`${API_BASE}/users/${editingId}`, {
         name: name.trim(), 
         age: Number(age), 
         email: email.trim()
@@ -70,7 +71,7 @@ function App() {
       setEditingId(null)
     } else {
       // CREATE mode
-      const res = await axios.post('http://localhost:3000/users', {
+      const res = await axios.post(`${API_BASE}/users`, {
         name: name.trim(), 
         age: Number(age), 
         email: email.trim()
