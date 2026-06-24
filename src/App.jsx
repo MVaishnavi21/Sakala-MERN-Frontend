@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import axios from 'axios'
 
 function App() {
   const [name, setName] = useState('')
@@ -7,6 +8,14 @@ function App() {
   const [message, setMessage] = useState('')
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [editingId, setEditingId] = useState(null)
+
+  const startEdit = (user) => {
+    setName(user.name)
+    setAge(user.age)
+    setEmail(user.email)
+    setEditingId(user._id)
+  }
 
   const fetchUsers = async () => {
     try {
@@ -36,43 +45,53 @@ function App() {
   }, [message])
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setMessage('')
-
-    if (!name.trim() ||!age ||!email.trim()) {
-      return setMessage('❌ Fill all fields, Vaishnavi')
-    }
-    if (isNaN(age) || Number(age) < 1 || Number(age) > 120) {
-      return setMessage('❌ Age must be between 1-120')
-    }
-    if (!email.includes('@')) {
-      return setMessage('❌ Enter a valid email')
-    }
-
-    try {
-      const res = await fetch('http://localhost:3000/profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), age: Number(age), email: email.trim() })
-      })
-      const data = await res.json()
-
-      if (res.ok) {
-        setMessage(`✅ Shipped: ${data.data.name}, ${data.data.age}`)
-        setName('')
-        setAge('')
-        setEmail('')
-      } else {
-        setMessage(`❌ ${data.message}`)
-      }
-    } catch (err) {
-      setMessage('❌ Server not running?')
-    }
+  e.preventDefault()
+  setMessage('')
+  
+  if (!name.trim() || !age || !email.trim()) {
+    return setMessage('❌ Fill all fields, Vaishnavi')
+  }
+  if (isNaN(age) || Number(age) < 1 || Number(age) > 120) {
+    return setMessage('❌ Age must be between 1-120')
+  }
+  if (!email.includes('@')) {
+    return setMessage('❌ Enter a valid email')
   }
 
+  try {
+    if (editingId) {
+      // UPDATE mode
+      const res = await axios.put(`http://localhost:3000/users/${editingId}`, {
+        name: name.trim(), 
+        age: Number(age), 
+        email: email.trim()
+      })
+      setMessage(`✅ Updated: ${res.data.data.name}`)
+      setEditingId(null)
+    } else {
+      // CREATE mode
+      const res = await axios.post('http://localhost:3000/users', {
+        name: name.trim(), 
+        age: Number(age), 
+        email: email.trim()
+      })
+      setMessage(`✅ Shipped: ${res.data.data.name}, ${res.data.data.age}`)
+    }
+    
+    setName('')
+    setAge('')
+    setEmail('')
+    fetchUsers()
+    
+  } catch (err) {
+    setMessage('❌ Server error')
+    console.log(err)
+  }
+}
+
   return (
-    <div style={{ padding: '20px', maxWidth: '500px' }}>
-      <h2>Sakala MERN - Day 12</h2>
+    <div >
+      <h1>Sakala MERN - Day 14: Full CRUD 💚</h1>
       <form onSubmit={handleSubmit}>
         <input value={name} onChange={e => setName(e.target.value)} placeholder="Name" />
         <input value={age} onChange={e => setAge(e.target.value)} placeholder="Age" type="number" />
@@ -83,20 +102,15 @@ function App() {
       <div style={{ marginTop: '30px', borderTop: '1px solid #ccc', paddingTop: '20px' }}>
         <h3>All Users from MongoDB ({users.length})</h3>
         {loading? <p>Loading...</p> :
-          users.length === 0? <p>No users yet. Add one!</p> :
+          users.length === 0 ? <p>No users yet. Add one!</p> : 
           users.map(user => (
-            <div key={user._id} style={{ border: '1px solid #eee', padding: '10px', margin: '5px 0', borderRadius: '5px' }}>
-              <strong>{user.name}</strong> | Age: {user.age || 'N/A'} | {user.email}
-    
-              <button 
-                onClick={() => deleteUser(user._id)}
-                style={{ marginLeft: '10px', background: '#ff4444', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '3px', cursor: 'pointer' }}
-              >
-                🗑️ Delete
-              </button>
-    
-            </div>
-        ))
+  <div key={user._id}>
+    <strong>{user.name}</strong> | Age: {user.age} | {user.email}
+    <button onClick={() => startEdit(user)}>✏️ Edit</button>
+    <button onClick={() => deleteUser(user._id)}>🗑️ Delete</button>
+  </div>
+))
+
         }
       </div>
     </div>
